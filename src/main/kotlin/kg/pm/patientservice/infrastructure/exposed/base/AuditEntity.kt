@@ -1,4 +1,4 @@
-package kg.pm.patientservice.infrastructure.jpa.base
+package kg.pm.patientservice.infrastructure.exposed.base
 
 import java.time.LocalDateTime
 

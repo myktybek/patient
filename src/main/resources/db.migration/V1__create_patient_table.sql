@@ -12,10 +12,10 @@ CREATE TABLE IF NOT EXISTS patient
 
     registered_date    TIMESTAMP WITHOUT TIME ZONE         NOT NULL,
 
-    created_by         BIGINT,
-    created_at         TIMESTAMP WITHOUT TIME ZONE,
-    last_modified_by   BIGINT,
-    last_modified_date TIMESTAMP WITHOUT TIME ZONE,
+--     created_by         BIGINT,
+--     created_at         TIMESTAMP WITHOUT TIME ZONE,
+--     last_modified_by   BIGINT,
+--     last_modified_date TIMESTAMP WITHOUT TIME ZONE,
 
     CONSTRAINT uk_patient_email UNIQUE (email)
 );

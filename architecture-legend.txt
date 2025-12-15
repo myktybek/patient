@@ -1,0 +1,79 @@
+## Architecture Legend (DDD + Hexagonal)
+
+We mix **DDD layers** with **Hexagonal (Ports & Adapters)**.
+
+### Layers vs Hexagonal roles
+
+| Layer          | What it is (DDD)                            | Hexagonal role                            | Examples                                |
+|----------------|---------------------------------------------|-------------------------------------------|-----------------------------------------|
+| `domain`       | Pure business model                         | Core + **outgoing ports**                 | `Customer`, `CustomerId`, `CustomerFilter`, `CustomerRepository` (port) |
+| `application`  | Use cases / application services            | Core + **incoming ports**                 | `CustomerQueryService` (port), `CustomerQueryServiceImpl`, `PageCriteria`, `PageResult` |
+| `presentation` | API / UI / communication with clients       | **Driving adapters** (call core)          | `CustomerController`, `CustomerSearchRequest`, `CustomerResponse`, `PageRequestDto`, `PageResponse`, `CustomerWebMapper` |
+| `infrastructure` | Technical details (DB, messaging, external APIs) | **Driven adapters** (used by core)        | `CustomerEntity`, `SpringDataCustomerRepository`, `CustomerPersistenceMapper`, `CustomerRepositoryJpaAdapter` (implements port) |
+
+### Dependency Direction
+
+```text
+presentation  ┐
+infrastructure ├──> application ───> domain
+bootstrap     ┘
+
+
+domain depends on nothing.
+application depends on domain (and shared core types).
+presentation & infrastructure depend on application / domain, never the other way around.
+
+
+
+
+
+
+
+src/main/kotlin/com/example/myapp
+  bootstrap/
+    ApiApplication.kt
+
+  shared/
+    pagination/
+      PageCriteria.kt
+      PageResult.kt
+      SortOrder.kt
+      SortDirection.kt
+
+  domain/
+    customer/
+      Customer.kt
+      CustomerId.kt
+      CustomerFilter.kt
+      CustomerRepository.kt   // port (interface)
+
+  application/
+    customer/
+      CustomerSummary.kt
+      CustomerQueryService.kt         // port (use case)
+      CustomerQueryServiceImpl.kt
+      CustomerApplicationMapper.kt?   // optional (domain -> summary)
+
+  presentation/            // <--- your REST API lives here
+    common/
+      PageRequestDto.kt    // what client sends (page,size,sort)
+      PageResponse.kt      // what client gets back (paged)
+    customer/
+      CustomerSearchRequest.kt // extends PageRequestDto or embeds it
+      CustomerResponse.kt
+      CustomerWebMapper.kt     // maps between presentation & application
+      CustomerController.kt
+
+  infrastructure/
+    persistence/
+      customer/
+        CustomerEntity.kt
+        SpringDataCustomerRepository.kt
+        CustomerPersistenceMapper.kt  // maps JPA <-> domain
+        CustomerRepositoryJpaAdapter.kt // adapter implementing CustomerRepository
+
+
+
+where event will live?
+
+Can application level have direct access to repositories or they should access via services

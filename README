@@ -1,0 +1,283 @@
+:domain
+Aggregates, VOs, domain services, repository interfaces, domain events, etc.
+Does not know about pagination types directly (or only uses them if you treat them as shared-kernel).
+
+:application (or :core if you merge application+domain)
+Application services / use cases.
+Query/filter objects (CustomerFilter, etc.).
+PageRequest, PageResult, SortOrder, SortDirection live here.
+
+Why? Pagination is typically about how you call use cases, not pure domain behavior.
+
+:adapter-persistence-jpa
+JPA entities, Spring Data repositories.
+Adapters that do PageRequest -> Pageable and Page<CustomerEntity> -> PageResult<Customer>.
+
+:adapter-rest-api
+Controllers.
+Request/response DTOs.
+PageResponse lives here.
+
+:bootstrap
+@SpringBootApplication class.
+Wiring of modules (depends on all adapters + application).
+
+
+*** why keep rest-api as separate module and not merge with application level
+Keeps your core logic testable without pulling in spring-boot-starter-web.
+Lets you potentially add other adapters later (gRPC, Kafka consumers, CLI) without bloating your web module.
+
+:domain                  (no deps)
+:application   -> :domain
+:adapter-persistence-jpa -> :application, :domain
+:adapter-rest-api        -> :application, :domain (and possibly :shared if you split it)
+:adapter-messaging       -> :application, :domain
+:infrastructure-external // external APIs, etc (later)
+
+:bootstrap               -> everything
+
+
+1. What hexagonal / DDD actually cares about
+Hexagonal (ports & adapters) + DDD basically says:
+
+*Core
+Domain model (domain)
+Application services / use cases (application)
+
+*Edges (adapters)
+Driving adapters (things that call your app): REST, GraphQL, CLI, messaging consumers
+Driven adapters (things your app calls): DB, message broker, external APIs, file storage, etc.
+
+It does not mandate folder/module names. It only cares about dependency direction and separation of concerns.
+
+
+
+
+
+
+it is common to join application with domain and call it core in hex architecture.
+
+***Eric Evans’ DDD book shows a 4-layer architecture:
+User Interface / Presentation
+Application
+Domain
+Infrastructure
+
+
+***DDD layers:
+domain
+application
+presentation
+infrastructure
+
+***Hexagonal concepts inside those:
+CustomerRepository = port (in domain)
+CustomerRepositoryJpaAdapter = adapter (in infrastructure.persistence)
+CustomerQueryService = application port (in application)
+CustomerController = adapter (in presentation)
+
+
+
+#######
+## Architecture Overview
+
+This project uses **Domain-Driven Design (DDD)** and **Hexagonal Architecture (Ports & Adapters)**.
+
+### DDD in this project
+
+DDD splits the code by *responsibility*, not by technology:
+
+- **Domain layer** – the heart of the system
+  - Contains the business model: aggregates, entities, value objects, domain services.
+  - Expresses business rules and invariants in ubiquitous language.
+  - Has no idea about HTTP, databases, or frameworks.
+
+- **Application layer** – use cases / workflows
+  - Coordinates domain objects to implement use cases (e.g. *Search customers*, *Place order*).
+  - Defines transaction boundaries and high-level policies (authorization, events, etc.).
+  - Calls domain repositories and other ports, but does not contain low-level technical code.
+
+- **Presentation layer** – how the outside world talks to us
+  - HTTP/REST controllers, request/response DTOs, validation.
+  - Translates HTTP/JSON into application-level inputs and back into HTTP responses.
+
+- **Infrastructure layer** – technical details
+  - Database mappings (JPA entities), Spring Data repositories, external API clients, messaging, etc.
+  - Implements ports defined by domain/application.
+
+### Hexagonal Architecture (Ports & Adapters)
+
+Hexagonal architecture describes **how** layers connect:
+
+- **Ports** – interfaces that define what the core needs or exposes.
+  - Incoming ports: application services (use cases) called by controllers, CLI, batch jobs, etc.
+  - Outgoing ports: repositories, external service clients, message publishers, etc.
+
+- **Adapters** – implementations of ports at the edges.
+  - Driving adapters: REST controllers, CLI, schedulers (they *call into* application services).
+  - Driven adapters: JPA adapters, HTTP clients, Kafka producers (they are *called by* the core).
+
+The core (domain + application) does not depend on any specific framework or transport.
+Adapters depend on the core, never the other way around.
+
+---
+
+## Modules
+
+### `:shared-kernel`
+
+**Responsibility**
+
+- Very small module for **generic, stable types** shared across layers.
+- Contains things that are not specific to a single bounded context.
+
+**Typical contents**
+
+- Pagination primitives: `PageCriteria`, `PageResult`, `SortOrder`, `SortDirection`.
+- Cross-cutting value objects (if needed): IDs, Money, etc.
+
+**Dependencies**
+
+- Has **no** dependency on other project modules.
+- Other modules (`:core`, adapters) may depend on `:shared-kernel`.
+
+---
+
+### `:core` (Domain + Application)
+
+This module contains the **business core** of the system: domain model + use cases.
+
+#### Domain (package `core.domain.*`)
+
+**Responsibility**
+
+- Model the business with rich types and rules.
+- Provide aggregates, entities, value objects, and domain services.
+- Define **domain repositories** as interfaces (ports) for persistence.
+
+**Typical contents**
+
+- `core.domain.customer.Customer`, `CustomerId`, `CustomerSearchCriteria`
+- `core.domain.customer.CustomerRepository` (domain port)
+- Domain logic methods like `order.cancel()`, `customer.changeEmail()`, etc.
+- Pure domain services that may depend on repositories.
+
+**Dependencies**
+
+- Depends only on `:shared-kernel` (for generic types like pagination, IDs, etc.).
+- Does **not** depend on application, presentation, or infrastructure.
+
+#### Application (package `core.application.*`)
+
+**Responsibility**
+
+- Implement **use cases** by orchestrating domain objects and repositories.
+- Define application-level input/output models (commands, filters, summaries).
+- Define and implement application services (incoming ports) used by adapters.
+- Handle transactions, use-case-level authorization and high-level policies.
+
+**Typical contents**
+
+- `core.application.customer.CustomerFilter`, `CustomerSummary`
+- `core.application.customer.CustomerQueryService`, `CustomerQueryServiceImpl`
+- Mapping between domain types and application DTOs.
+- Publishing domain events via outgoing ports.
+
+**Dependencies**
+
+- Depends on `core.domain.*` and `:shared-kernel`.
+- Does **not** depend on presentation or infrastructure.
+
+---
+
+### `:adapter-rest`
+
+**Responsibility**
+
+- Expose the application layer via **HTTP/REST**.
+- Translate HTTP requests into application calls and map results to JSON responses.
+
+**Typical contents**
+
+- Controllers: `CustomerController` (driving adapters).
+- Web DTOs:
+  - Requests: `CustomerSearchRequest`, other request bodies.
+  - Responses: `CustomerResponse`, `PageResponse`, etc.
+- Web mappers:
+  - `CustomerWebMapper` (maps `CustomerSearchRequest` → `CustomerFilter`, `CustomerSummary` → `CustomerResponse`).
+- Extension functions for mapping pagination:
+  - `PageResult<T>.toPageResponse(...)` in `presentation/common`.
+
+**Dependencies**
+
+- Depends on `:core` (application + domain) and `:shared-kernel`.
+- Does **not** contain business rules or persistence logic.
+
+---
+
+### `:adapter-persistence-jpa`
+
+**Responsibility**
+
+- Provide a JPA-based implementation of domain repositories.
+- Translate between domain entities and database representation.
+
+**Typical contents**
+
+- JPA entities: `CustomerEntity`, etc.
+- Spring Data interfaces: `SpringDataCustomerRepository`.
+- Adapters implementing domain repository ports:
+  - `CustomerRepositoryJpaAdapter : CustomerRepository`
+- Mappers between JPA entities and domain aggregates:
+  - `CustomerPersistenceMapper`.
+
+**Dependencies**
+
+- Depends on `:core` (to implement `CustomerRepository` and map to domain types).
+- Depends on JPA/Spring Data and the database driver.
+- Does **not** depend on `:adapter-rest`.
+
+---
+
+### `:bootstrap`
+
+**Responsibility**
+
+- Application startup and wiring.
+- Contains the `@SpringBootApplication` entrypoint and configuration that ties modules together.
+
+**Typical contents**
+
+- `ApiApplication.kt` (main method).
+- Spring configuration for component scanning, profiles, etc.
+
+**Dependencies**
+
+- Depends on `:core`, `:adapter-rest`, `:adapter-persistence-jpa`, and possibly other adapters.
+- Contains **no** business logic.
+
+---
+
+### Dependency Direction Summary
+
+```text
+              +---------------------+
+              |     :shared-kernel  |
+              +----------+----------+
+                         ^
+                         |
+               +---------+----------+
+               |        :core       |  (domain + application)
+               +----+----------+----+
+                    ^          ^
+                    |          |
+          +---------+--+    +--+----------------+
+          | :adapter-rest |  | :adapter-persistence-jpa |
+          +---------+-----+  +-----------+-------------+
+                    ^                      ^
+                    |                      |
+                    +-----------+----------+
+                                |
+                           :bootstrap
+
+

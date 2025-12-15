@@ -1,0 +1,1 @@
+How normal is it to have sorting class from application in presentation layer

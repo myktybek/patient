@@ -1,0 +1,13 @@
+@API_HOST = http://localhost:4000
+@BASE_PATH = /api/patients
+
+@REG_FROM = 2025-01-01
+@REG_TO = 2025-12-31
+
+### Patients: search (GET) — with all filters
+GET {{API_HOST}}{{BASE_PATH}}?paging.page=0&paging.size=100&sortBy.property=id&sortBy.direction=asc&filter.name=barbos&filter.email=brabos@gmail.com&filter.registeredFrom={{REG_FROM}}&filter.registeredTo={{REG_TO}}
+Accept: application/json
+
+### Patients: search (GET) — minimal (no filters)
+GET {{API_HOST}}{{BASE_PATH}}?paging.page=0&paging.size=100&sortBy.property=ID&sortBy.direction=ASC
+Accept: application/json

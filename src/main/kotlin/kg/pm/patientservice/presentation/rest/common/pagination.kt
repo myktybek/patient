@@ -1,16 +1,17 @@
-package kg.pm.patientservice.presentation.rest.pagination
+package kg.pm.patientservice.presentation.rest.common
+
+import kg.pm.patientservice.shared.PageResult
+import kg.pm.patientservice.shared.SortDirection
 
 data class PageRequestDto(
     val page: Int = 0,
     val size: Int = 100,
 )
 
-data class SortOrder(
-    val property: String,
+data class SortOrderDto<T>(
+    val property: T,
     val direction: SortDirection = SortDirection.ASC
 )
-
-enum class SortDirection { ASC, DESC }
 
 data class PageResponseDto<T>(
     val content: List<T>,
@@ -19,3 +20,12 @@ data class PageResponseDto<T>(
     val totalElements: Long,
     val totalPages: Int
 )
+
+fun <D, R> PageResult<D>.toPageResponse(mapper: (D) -> R): PageResponseDto<R> =
+    PageResponseDto(
+        content = this.content.map(mapper),
+        page = this.page,
+        size = this.size,
+        totalElements = this.totalElements,
+        totalPages = this.totalPages
+    )

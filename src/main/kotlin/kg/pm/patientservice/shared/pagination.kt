@@ -3,7 +3,6 @@ package kg.pm.patientservice.shared
 data class PageCriteria(
     val page: Int,
     val size: Int,
-    val sort: List<SortOrder>
 )
 
 data class SortOrder(
@@ -20,3 +19,12 @@ data class PageResult<T>(
     val totalElements: Long,
     val totalPages: Int
 )
+
+fun <D, R> PageResult<D>.transform(mapper: (D) -> R): PageResult<R> =
+    PageResult(
+        content = this.content.map(mapper),
+        page = this.page,
+        size = this.size,
+        totalElements = this.totalElements,
+        totalPages = this.totalPages
+    )
