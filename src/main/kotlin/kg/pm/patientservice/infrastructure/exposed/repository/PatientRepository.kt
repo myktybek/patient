@@ -80,14 +80,14 @@ class PatientRepositoryImpl : PatientRepositoryInterface {
 
 /**
  * Extension function to map Exposed ResultRow to Domain Patient entity.
- * Converts TIMESTAMP to LocalDate for registeredDate.
+ * Handles value object reconstitution and JSON deserialization for Address.
  */
 private fun ResultRow.toPatient(): Patient {
-    return Patient(
-        id = this[PatientsTable.id].value,
-        name = this[PatientsTable.name],
-        email = this[PatientsTable.email],
-        address = this[PatientsTable.address],
+    return Patient.reconstitute(
+        id = kg.pm.patientservice.domain.core.model.valueobject.PatientId(this[PatientsTable.id].value),
+        email = kg.pm.patientservice.domain.core.model.valueobject.Email(this[PatientsTable.email]),
+        name = this[PatientsTable.name]?.let { kg.pm.patientservice.domain.core.model.valueobject.Name(it) },
+        address = kg.pm.patientservice.infrastructure.exposed.mapper.AddressJsonMapper.fromJson(this[PatientsTable.address]),
         dateOfBirth = this[PatientsTable.dateOfBirth],
         registeredDate = this[PatientsTable.registeredDate]
     )

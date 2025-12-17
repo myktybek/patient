@@ -1,4 +1,4 @@
-package kg.pm.patientservice.application
+package kg.pm.patientservice.application.usecase
 
 import kg.pm.patientservice.application.dto.patient.PatientResult
 import kg.pm.patientservice.application.dto.patient.PatientSearchCriteria
@@ -13,18 +13,18 @@ import org.springframework.transaction.annotation.Transactional
  * Application service that orchestrates domain operations
  * and maps domain entities to application DTOs.
  */
-interface PatientSearchService {
-    fun getPatients(patientSearchCriteria: PatientSearchCriteria): PageResult<PatientResult>
+interface PatientSearchUseCase {
+    fun search(patientSearchCriteria: PatientSearchCriteria): PageResult<PatientResult>
 }
 
 @Service
-class PatientSearchServiceImpl(
+class PatientSearchUseCaseImpl(
     private val patientMapper: PatientMapper,
     private val patientRetrieverRepository: PatientRetrieverRepository
-) : PatientSearchService {
+) : PatientSearchUseCase {
 
     @Transactional
-    override fun getPatients(patientSearchCriteria: PatientSearchCriteria): PageResult<PatientResult> {
+    override fun search(patientSearchCriteria: PatientSearchCriteria): PageResult<PatientResult> {
         return patientRetrieverRepository
             .search(patientSearchCriteria)
             .transform { patientMapper.toPatientResult(it) }

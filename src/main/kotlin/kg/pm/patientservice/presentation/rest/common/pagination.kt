@@ -1,10 +1,13 @@
 package kg.pm.patientservice.presentation.rest.common
 
+import jakarta.validation.constraints.Size
 import kg.pm.patientservice.shared.PageResult
 import kg.pm.patientservice.shared.SortDirection
 
 data class PageRequestDto(
     val page: Int = 0,
+
+    @field:Size(max = 100)
     val size: Int = 100,
 )
 
