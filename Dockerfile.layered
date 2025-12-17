@@ -16,7 +16,10 @@ COPY src ./src
 # Build the application
 RUN ./gradlew bootJar --no-daemon -x test
 
-# Runtime stage
+# Extract layers for optimal caching
+RUN java -Djarmode=layertools -jar build/libs/*.jar extract
+
+# Runtime stage with layered approach
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
@@ -26,8 +29,12 @@ RUN apk add --no-cache dumb-init
 # Create non-root user
 RUN addgroup -S spring && adduser -S spring -G spring
 
-# Copy the jar file
-COPY --from=build --chown=spring:spring /app/build/libs/*.jar app.jar
+# Copy layers in order of least to most frequently changed
+# This maximizes Docker layer caching
+COPY --from=build --chown=spring:spring /app/dependencies/ ./
+COPY --from=build --chown=spring:spring /app/spring-boot-loader/ ./
+COPY --from=build --chown=spring:spring /app/snapshot-dependencies/ ./
+COPY --from=build --chown=spring:spring /app/application/ ./
 
 # Switch to non-root user
 USER spring:spring
@@ -35,8 +42,13 @@ USER spring:spring
 # Expose port
 EXPOSE 4000
 
-# Environment variables
-ENV JAVA_OPTS="-Xmx512m -Xms256m" \
+# Environment variables with Spring Boot optimizations
+ENV JAVA_OPTS="-Xmx512m -Xms256m \
+    -XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:+ExitOnOutOfMemoryError \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=100" \
     SPRING_PROFILES_ACTIVE=prod
 
 # Health check
@@ -45,4 +57,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+CMD ["sh", "-c", "java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher"]
