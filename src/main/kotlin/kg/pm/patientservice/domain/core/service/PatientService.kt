@@ -1,5 +1,6 @@
 package kg.pm.patientservice.domain.core.service
 
+import kg.pm.patientservice.domain.core.exception.EmailNotUniqueException
 import kg.pm.patientservice.domain.core.model.valueobject.Email
 import kg.pm.patientservice.domain.core.model.valueobject.PatientId
 import kg.pm.patientservice.domain.core.repository.PatientRepository
@@ -40,8 +41,3 @@ class PatientServiceImpl(
         return !patientRepository.existsByEmail(email, excludePatientId)
     }
 }
-
-/**
- * Exception thrown when attempting to use an email that's already registered.
- */
-class EmailNotUniqueException(message: String) : IllegalStateException(message)

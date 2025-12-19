@@ -26,7 +26,7 @@ dependencies {
     implementation(platform("org.jetbrains.exposed:exposed-bom:1.0.0-rc-4"))
     implementation("org.jetbrains.exposed:exposed-spring-boot-starter")
     implementation("org.jetbrains.exposed:exposed-java-time")
-
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

@@ -38,8 +38,8 @@ class PatientController(
     @PostMapping
     fun registerPatient(@Valid @RequestBody request: RegisterPatientRequest): PatientIdResponse {
         val command = patientCommandMapper.toRegisterPatientCommand(request)
-        val patientId = registerPatientUseCase.execute(command)
-        return PatientIdResponse(patientId.value)
+        val patientId: Long = registerPatientUseCase.execute(command)
+        return PatientIdResponse(patientId)
     }
 
     @PutMapping("/{id}")

@@ -10,7 +10,7 @@ class PatientMapper {
     fun toPatientResult(patient: Patient): PatientResult {
         return PatientResult(
             id = patient.id?.value ?: throw IllegalStateException("Patient ID cannot be null"),
-            name = patient.getName()?.value,
+            name = patient.getName(),
             email = patient.getEmail().value,
             address = patient.getAddress()?.toFormattedString(),
             dateOfBirth = patient.dateOfBirth,

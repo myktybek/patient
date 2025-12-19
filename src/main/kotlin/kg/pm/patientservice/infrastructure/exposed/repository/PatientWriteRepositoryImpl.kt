@@ -2,7 +2,6 @@ package kg.pm.patientservice.infrastructure.exposed.repository
 
 import kg.pm.patientservice.domain.core.model.Patient
 import kg.pm.patientservice.domain.core.model.valueobject.Email
-import kg.pm.patientservice.domain.core.model.valueobject.Name
 import kg.pm.patientservice.domain.core.model.valueobject.PatientId
 import kg.pm.patientservice.domain.core.repository.PatientRepository
 import kg.pm.patientservice.infrastructure.exposed.PatientsTable
@@ -23,10 +22,8 @@ class PatientWriteRepositoryImpl : PatientRepository {
     @Transactional
     override fun save(patient: Patient): Patient {
         return if (patient.id == null) {
-            // Insert new patient
             insert(patient)
         } else {
-            // Update existing patient
             update(patient)
             patient
         }
@@ -70,7 +67,7 @@ class PatientWriteRepositoryImpl : PatientRepository {
 
     private fun insert(patient: Patient): Patient {
         val insertedId = PatientsTable.insert {
-            it[name] = patient.getName()?.value
+            it[name] = patient.getName()
             it[email] = patient.getEmail().value
             it[address] = patient.getAddress()?.let { addr -> AddressJsonMapper.toJson(addr) }
             it[dateOfBirth] = patient.dateOfBirth
@@ -92,7 +89,7 @@ class PatientWriteRepositoryImpl : PatientRepository {
         requireNotNull(patient.id) { "Patient ID cannot be null for update" }
 
         PatientsTable.update({ PatientsTable.id eq patient.id.value }) {
-            it[name] = patient.getName()?.value
+            it[name] = patient.getName()
             it[email] = patient.getEmail().value
             it[address] = patient.getAddress()?.let { addr -> AddressJsonMapper.toJson(addr) }
             it[dateOfBirth] = patient.dateOfBirth

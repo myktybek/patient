@@ -1,9 +1,9 @@
 package kg.pm.patientservice.presentation.rest.mapper
 
-import kg.pm.patientservice.application.command.AddressCommand
-import kg.pm.patientservice.application.command.ChangePatientEmailCommand
-import kg.pm.patientservice.application.command.RegisterPatientCommand
-import kg.pm.patientservice.application.command.UpdatePatientProfileCommand
+import kg.pm.patientservice.application.dto.patient.AddressCommand
+import kg.pm.patientservice.application.dto.patient.ChangePatientEmailCommand
+import kg.pm.patientservice.application.dto.patient.RegisterPatientCommand
+import kg.pm.patientservice.application.dto.patient.UpdatePatientProfileCommand
 import kg.pm.patientservice.presentation.rest.dto.AddressRequest
 import kg.pm.patientservice.presentation.rest.dto.ChangePatientEmailRequest
 import kg.pm.patientservice.presentation.rest.dto.RegisterPatientRequest

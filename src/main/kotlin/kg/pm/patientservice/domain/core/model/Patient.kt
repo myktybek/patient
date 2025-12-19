@@ -1,7 +1,9 @@
 package kg.pm.patientservice.domain.core.model
 
 import kg.pm.patientservice.domain.core.event.*
-import kg.pm.patientservice.domain.core.model.valueobject.*
+import kg.pm.patientservice.domain.core.model.valueobject.Address
+import kg.pm.patientservice.domain.core.model.valueobject.Email
+import kg.pm.patientservice.domain.core.model.valueobject.PatientId
 import java.time.LocalDate
 
 /**
@@ -11,14 +13,13 @@ import java.time.LocalDate
  */
 class Patient private constructor(
     val id: PatientId?,
-    private var name: Name?,
+    private var name: String?,
     private var email: Email,
     private var address: Address?,
     val dateOfBirth: LocalDate?,
     val registeredDate: LocalDate
 ) {
-    // Public getters for encapsulated fields
-    fun getName(): Name? = name
+    fun getName(): String? = name
     fun getEmail(): Email = email
     fun getAddress(): Address? = address
 
@@ -31,20 +32,24 @@ class Patient private constructor(
     }
 
     companion object {
-        /**
-         * Factory method to register a new patient.
-         * Publishes PatientRegisteredEvent.
-         */
         fun register(
             email: Email,
-            name: Name?,
+            name: String?,
             address: Address?,
             dateOfBirth: LocalDate?,
             registeredDate: LocalDate = LocalDate.now()
         ): Patient {
+            // Validate name if provided
+            val validatedName = name?.let {
+                val trimmed = it.trim()
+                require(trimmed.isNotBlank()) { "Name cannot be blank" }
+                require(trimmed.length in 1..255) { "Name must be between 1 and 255 characters" }
+                trimmed
+            }
+
             val patient = Patient(
-                id = null, // Will be assigned after persistence
-                name = name,
+                id = null,
+                name = validatedName,
                 email = email,
                 address = address,
                 dateOfBirth = dateOfBirth,
@@ -69,7 +74,7 @@ class Patient private constructor(
         fun reconstitute(
             id: PatientId,
             email: Email,
-            name: Name?,
+            name: String?,
             address: Address?,
             dateOfBirth: LocalDate?,
             registeredDate: LocalDate
@@ -113,13 +118,20 @@ class Patient private constructor(
      * Publishes PatientUpdatedEvent.
      */
     fun updateProfile(
-        name: Name?,
+        name: String?,
         address: Address?,
         dateOfBirth: LocalDate?
     ) {
         requireNotNull(id) { "Cannot update profile for a patient that hasn't been persisted" }
 
-        this.name = name
+        // Validate name if provided
+        name?.let {
+            val trimmed = it.trim()
+            require(trimmed.isNotBlank()) { "Name cannot be blank" }
+            require(trimmed.length in 1..255) { "Name must be between 1 and 255 characters" }
+        }
+
+        this.name = name?.trim()
         this.address = address
         // dateOfBirth is immutable after initial registration (final val in constructor)
 
@@ -177,6 +189,6 @@ class Patient private constructor(
     }
 
     override fun toString(): String {
-        return "Patient(id=$id, email=${email.value}, name=${name?.value}, registeredDate=$registeredDate)"
+        return "Patient(id=$id, email=${email.value}, name=$name, registeredDate=$registeredDate)"
     }
 }

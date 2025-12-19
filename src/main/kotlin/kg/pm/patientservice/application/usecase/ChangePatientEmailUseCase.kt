@@ -1,6 +1,6 @@
 package kg.pm.patientservice.application.usecase
 
-import kg.pm.patientservice.application.command.ChangePatientEmailCommand
+import kg.pm.patientservice.application.dto.patient.ChangePatientEmailCommand
 import kg.pm.patientservice.domain.core.event.DomainEventPublisher
 import kg.pm.patientservice.domain.core.model.valueobject.Email
 import kg.pm.patientservice.domain.core.model.valueobject.PatientId

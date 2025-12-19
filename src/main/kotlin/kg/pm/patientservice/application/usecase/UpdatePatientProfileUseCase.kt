@@ -1,10 +1,9 @@
 package kg.pm.patientservice.application.usecase
 
-import kg.pm.patientservice.application.command.AddressCommand
-import kg.pm.patientservice.application.command.UpdatePatientProfileCommand
+import kg.pm.patientservice.application.dto.patient.AddressCommand
+import kg.pm.patientservice.application.dto.patient.UpdatePatientProfileCommand
 import kg.pm.patientservice.domain.core.event.DomainEventPublisher
 import kg.pm.patientservice.domain.core.model.valueobject.Address
-import kg.pm.patientservice.domain.core.model.valueobject.Name
 import kg.pm.patientservice.domain.core.model.valueobject.PatientId
 import kg.pm.patientservice.domain.core.repository.PatientRepository
 import org.springframework.stereotype.Service
@@ -29,7 +28,7 @@ class UpdatePatientProfileUseCase(
             ?: throw PatientNotFoundException("Patient with ID ${command.patientId} not found")
 
         // Convert command to domain value objects
-        val name = command.name?.let { Name(it) }
+        val name = command.name
         val address = command.address?.toDomain()
 
         // Update profile using domain method

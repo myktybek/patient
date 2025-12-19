@@ -1,13 +1,11 @@
 package kg.pm.patientservice.application.usecase
 
-import kg.pm.patientservice.application.command.AddressCommand
-import kg.pm.patientservice.application.command.RegisterPatientCommand
+import kg.pm.patientservice.application.dto.patient.AddressCommand
+import kg.pm.patientservice.application.dto.patient.RegisterPatientCommand
 import kg.pm.patientservice.domain.core.event.DomainEventPublisher
 import kg.pm.patientservice.domain.core.model.Patient
 import kg.pm.patientservice.domain.core.model.valueobject.Address
 import kg.pm.patientservice.domain.core.model.valueobject.Email
-import kg.pm.patientservice.domain.core.model.valueobject.Name
-import kg.pm.patientservice.domain.core.model.valueobject.PatientId
 import kg.pm.patientservice.domain.core.repository.PatientRepository
 import kg.pm.patientservice.domain.core.service.PatientService
 import org.springframework.stereotype.Service
@@ -25,29 +23,24 @@ class RegisterPatientUseCase(
 ) {
 
     @Transactional
-    fun execute(command: RegisterPatientCommand): PatientId {
-        // Convert command to domain value objects
+    fun execute(command: RegisterPatientCommand): Long {
         val email = Email(command.email)
-        val name = command.name?.let { Name(it) }
         val address = command.address?.toDomain()
 
         patientService.ensureEmailIsUnique(email)
 
-        // Create patient using factory method
         val patient = Patient.register(
             email = email,
-            name = name,
+            name = command.name,
             address = address,
             dateOfBirth = command.dateOfBirth
         )
-
-        // Save patient
-        val savedPatient = patientRepository.save(patient)
+        val savedPatient: Patient = patientRepository.save(patient)
 
         // Publish domain events
         eventPublisher.publish(savedPatient.domainEvents)
 
-        return savedPatient.id!!
+        return savedPatient.id!!.value
     }
 }
 

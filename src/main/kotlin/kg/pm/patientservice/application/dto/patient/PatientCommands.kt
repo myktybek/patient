@@ -1,4 +1,4 @@
-package kg.pm.patientservice.application.command
+package kg.pm.patientservice.application.dto.patient
 
 import java.time.LocalDate
 
