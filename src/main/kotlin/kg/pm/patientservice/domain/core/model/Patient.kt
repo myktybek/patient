@@ -18,7 +18,7 @@ class Patient private constructor(
     private var address: Address?,
     private var dateOfBirth: LocalDate?,
     val registeredDate: LocalDate
-) {
+) : AggregateRoot() {
     fun getName(): String? = name
     fun getEmail(): Email = email
     fun getAddress(): Address? = address
@@ -26,9 +26,9 @@ class Patient private constructor(
 
     // Domain events collection
     private val _domainEvents = mutableListOf<DomainEvent>()
-    val domainEvents: List<DomainEvent> get() = _domainEvents.toList()
+    override val domainEvents: List<DomainEvent> get() = _domainEvents.toList()
 
-    fun clearDomainEvents() {
+    override fun clearDomainEvents() {
         _domainEvents.clear()
     }
 
@@ -107,17 +107,13 @@ class Patient private constructor(
 
         _domainEvents.add(
             PatientEmailChangedEvent(
-                patientId = id.value,
-                oldEmail = oldEmail.value,
-                newEmail = newEmail.value
+                patientId = id.value, oldEmail = oldEmail.value, newEmail = newEmail.value
             )
         )
     }
 
     fun updateProfile(
-        name: String?,
-        address: Address?,
-        dateOfBirth: LocalDate?
+        name: String?, address: Address?, dateOfBirth: LocalDate?
     ) {
         requireNotNull(id) { "Cannot update profile for a patient that hasn't been persisted" }
 

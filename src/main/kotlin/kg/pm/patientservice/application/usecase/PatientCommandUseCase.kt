@@ -37,7 +37,7 @@ class PatientCommandUseCase(
 
         patientRepository.save(patient)
 
-        eventPublisher.publish(patient.domainEvents)
+        eventPublisher.publishAndClear(patient)
     }
 
     @Transactional
@@ -55,8 +55,7 @@ class PatientCommandUseCase(
         )
         val savedPatient: Patient = patientRepository.save(patient)
 
-        // Publish domain events
-        eventPublisher.publish(savedPatient.domainEvents)
+        eventPublisher.publishAndClear(patient)
 
         return savedPatient.id!!.value
     }
@@ -76,7 +75,7 @@ class PatientCommandUseCase(
 
         patientRepository.save(patient)
 
-        eventPublisher.publish(patient.domainEvents)
+        eventPublisher.publishAndClear(patient)
     }
 
     @Transactional
@@ -87,7 +86,7 @@ class PatientCommandUseCase(
 
         patient.markForDeletion()
 
-        eventPublisher.publish(patient.domainEvents)
+        eventPublisher.publishAndClear(patient)
 
         patientRepository.deleteById(id)
     }
