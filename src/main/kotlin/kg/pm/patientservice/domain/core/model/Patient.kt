@@ -16,12 +16,13 @@ class Patient private constructor(
     private var name: String?,
     private var email: Email,
     private var address: Address?,
-    val dateOfBirth: LocalDate?,
+    private var dateOfBirth: LocalDate?,
     val registeredDate: LocalDate
 ) {
     fun getName(): String? = name
     fun getEmail(): Email = email
     fun getAddress(): Address? = address
+    fun getDateOfBirth(): LocalDate? = dateOfBirth
 
     // Domain events collection
     private val _domainEvents = mutableListOf<DomainEvent>()
@@ -113,10 +114,6 @@ class Patient private constructor(
         )
     }
 
-    /**
-     * Updates the patient's profile information.
-     * Publishes PatientUpdatedEvent.
-     */
     fun updateProfile(
         name: String?,
         address: Address?,
@@ -133,39 +130,31 @@ class Patient private constructor(
 
         this.name = name?.trim()
         this.address = address
-        // dateOfBirth is immutable after initial registration (final val in constructor)
+        this.dateOfBirth = dateOfBirth
 
         _domainEvents.add(
             PatientUpdatedEvent(patientId = id.value)
         )
     }
+//
+//    fun updateAddress(newAddress: Address?) {
+//        requireNotNull(id) { "Cannot update address for a patient that hasn't been persisted" }
+//
+//        if (address == newAddress) return // No change
+//
+//        this.address = newAddress
+//
+//        // Only publish event if address is not null (meaningful change)
+//        if (newAddress != null) {
+//            _domainEvents.add(
+//                PatientAddressChangedEvent(
+//                    patientId = id.value,
+//                    newAddress = newAddress.toFormattedString()
+//                )
+//            )
+//        }
+//    }
 
-    /**
-     * Updates just the patient's address.
-     * Publishes PatientAddressChangedEvent.
-     */
-    fun updateAddress(newAddress: Address?) {
-        requireNotNull(id) { "Cannot update address for a patient that hasn't been persisted" }
-
-        if (address == newAddress) return // No change
-
-        this.address = newAddress
-
-        // Only publish event if address is not null (meaningful change)
-        if (newAddress != null) {
-            _domainEvents.add(
-                PatientAddressChangedEvent(
-                    patientId = id.value,
-                    newAddress = newAddress.toFormattedString()
-                )
-            )
-        }
-    }
-
-    /**
-     * Marks the patient for deletion.
-     * Publishes PatientDeletedEvent.
-     */
     fun markForDeletion() {
         requireNotNull(id) { "Cannot delete a patient that hasn't been persisted" }
 

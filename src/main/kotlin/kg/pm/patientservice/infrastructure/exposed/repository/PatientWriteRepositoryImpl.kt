@@ -6,7 +6,6 @@ import kg.pm.patientservice.domain.core.model.valueobject.PatientId
 import kg.pm.patientservice.domain.core.repository.PatientRepository
 import kg.pm.patientservice.infrastructure.exposed.PatientsTable
 import kg.pm.patientservice.infrastructure.exposed.mapper.AddressJsonMapper
-import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.*
 import org.springframework.stereotype.Repository
@@ -98,17 +97,17 @@ class PatientWriteRepositoryImpl : PatientRepository {
     }
 }
 
-/**
- * Extension function to map Exposed ResultRow to Domain Patient entity.
- * Handles value object reconstitution and JSON deserialization for Address.
- */
-private fun ResultRow.toPatient(): Patient {
-    return Patient.reconstitute(
-        id = PatientId(this[PatientsTable.id].value),
-        email = Email(this[PatientsTable.email]),
-        name = this[PatientsTable.name]?.let { Name(it) },
-        address = AddressJsonMapper.fromJson(this[PatientsTable.address]),
-        dateOfBirth = this[PatientsTable.dateOfBirth],
-        registeredDate = this[PatientsTable.registeredDate]
-    )
-}
+///**
+// * Extension function to map Exposed ResultRow to Domain Patient entity.
+// * Handles value object reconstitution and JSON deserialization for Address.
+// */
+//private fun ResultRow.toPatient(): Patient {
+//    return Patient.reconstitute(
+//        id = PatientId(this[PatientsTable.id].value),
+//        email = Email(this[PatientsTable.email]),
+//        name = this[PatientsTable.name],
+//        address = AddressJsonMapper.fromJson(this[PatientsTable.address]),
+//        dateOfBirth = this[PatientsTable.dateOfBirth],
+//        registeredDate = this[PatientsTable.registeredDate]
+//    )
+//}

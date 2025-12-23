@@ -11,7 +11,7 @@ import org.jetbrains.exposed.v1.javatime.date
 object PatientsTable : LongIdTable("patient") {
     val name = varchar("name", length = 255).nullable()
     val email = varchar("email", length = 255).uniqueIndex()
-    val address = varchar("address", length = 255).nullable()
+    val address = varchar("address", length = 400).nullable()
     val dateOfBirth = date("date_of_birth").nullable()
     val registeredDate = date("registered_date") // SQL uses TIMESTAMP WITHOUT TIME ZONE NOT NULL
     

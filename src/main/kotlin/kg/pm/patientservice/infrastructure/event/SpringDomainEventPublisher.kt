@@ -5,10 +5,7 @@ import kg.pm.patientservice.domain.core.event.DomainEventPublisher
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 
-/**
- * Spring-based implementation of DomainEventPublisher.
- * Publishes domain events to Spring's event bus for asynchronous processing.
- */
+
 @Component
 class SpringDomainEventPublisher(
     private val applicationEventPublisher: ApplicationEventPublisher

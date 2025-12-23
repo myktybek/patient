@@ -155,6 +155,55 @@ This module contains the **business core** of the system: domain model + use cas
 - Provide aggregates, entities, value objects, and domain services.
 - Define **domain repositories** as interfaces (ports) for persistence.
 
+(A Value Object is an immutable object that describes some characteristic or attribute but has no identity of its own. It's defined by its values, not by a unique ID.)
+1. Equality by Value (not by identity)
+2. Immutable (cannot be changed after creation)
+3. Self-Validating (always in a valid state)
+4. No Identity (no ID field)
+
+When to Use Value Objects
+1. Type represents a concept with validation rules
+- Email, Phone, ZipCode, SSN
+2. Type has business meaning beyond primitive
+- Money (amount + currency), Address (structured), DateRange
+3. Type should be immutable
+- Coordinates, Temperature, Color
+4. Type has no identity
+- Two emails with same value are "the same email"
+
+❌ Don't Use Value Objects When:
+1. Simple primitive is sufficient
+- name: String (if no validation needed)
+2. Object needs identity
+- User, Order, Product (use Entity)
+3. Object changes frequently
+- Shopping cart (use Entity with mutable state)
+
+Benefits of Value Objects
+1. Type Safety
+2. Validation in One Place
+3. Business Rules Encapsulation
+4. Prevents Primitive Obsession Anti-Pattern
+
+Value Objects move validation and business rules from everywhere in your code into one place - the constructor. Once created, they're guaranteed to be valid.
+
+
+Why it's an Entity:
+- Has unique identity: Uses PatientId to uniquely identify each patient
+- Identity persists: A patient with ID "123" remains the same patient even if their email or name changes
+- Mutable state: Can change email, name, address through domain methods
+- Equality based on identity: The equals() method compares based on id, not attributes
+
+Why it's an Aggregate Root:
+
+- Entry point for operations: All modifications go through the Patient class methods
+- Manages domain events: Collects and publishes events for state changes
+- Enforces business invariants: Validates email uniqueness, name constraints, etc.
+- Contains value objects: Manages Email, Address, and previously Name value objects
+- Transactional boundary: All changes to patient-related data go through this root
+
+
+
 **Typical contents**
 
 - `core.domain.customer.Customer`, `CustomerId`, `CustomerSearchCriteria`

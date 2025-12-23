@@ -13,7 +13,7 @@ class PatientMapper {
             name = patient.getName(),
             email = patient.getEmail().value,
             address = patient.getAddress()?.toFormattedString(),
-            dateOfBirth = patient.dateOfBirth,
+            dateOfBirth = patient.getDateOfBirth(),
             registeredDate = patient.registeredDate
         )
     }

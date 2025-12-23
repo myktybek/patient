@@ -1,44 +1,30 @@
 package kg.pm.patientservice.presentation.rest
 
 import jakarta.validation.Valid
-import kg.pm.patientservice.application.usecase.PatientSearchUseCase
-import kg.pm.patientservice.application.dto.patient.PatientResult
-import kg.pm.patientservice.application.dto.patient.PatientSearchCriteria
-import kg.pm.patientservice.application.usecase.ChangePatientEmailUseCase
-import kg.pm.patientservice.application.usecase.DeletePatientUseCase
-import kg.pm.patientservice.application.usecase.RegisterPatientUseCase
-import kg.pm.patientservice.application.usecase.UpdatePatientProfileUseCase
-import kg.pm.patientservice.presentation.rest.common.PageResponseDto
-import kg.pm.patientservice.presentation.rest.common.toPageResponse
-import kg.pm.patientservice.presentation.rest.dto.*
+import kg.pm.patientservice.application.usecase.PatientCommandUseCase
+import kg.pm.patientservice.presentation.rest.dto.ChangePatientEmailRequest
+import kg.pm.patientservice.presentation.rest.dto.PatientIdResponse
+import kg.pm.patientservice.presentation.rest.dto.RegisterPatientRequest
+import kg.pm.patientservice.presentation.rest.dto.UpdatePatientProfileRequest
 import kg.pm.patientservice.presentation.rest.mapper.PatientCommandMapper
-import kg.pm.patientservice.presentation.rest.mapper.PatientSearchMapper
-import kg.pm.patientservice.shared.PageResult
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/patients")
+@RequestMapping("api/patients")
 class PatientController(
-    private val patientSearchUseCase: PatientSearchUseCase,
-    private val patientSearchMapper: PatientSearchMapper,
     private val patientCommandMapper: PatientCommandMapper,
-    private val registerPatientUseCase: RegisterPatientUseCase,
-    private val updatePatientProfileUseCase: UpdatePatientProfileUseCase,
-    private val changePatientEmailUseCase: ChangePatientEmailUseCase,
-    private val deletePatientUseCase: DeletePatientUseCase
+    private val patientCommandUseCase: PatientCommandUseCase
 ) {
-
-    @GetMapping
-    fun getPatients(patientSearchRequest: PatientSearchRequest): PageResponseDto<PatientResponse> {
-        val searchCriteria: PatientSearchCriteria = patientSearchMapper.toPatientSearchCriteria(patientSearchRequest)
-        val patients: PageResult<PatientResult> = patientSearchUseCase.search(searchCriteria)
-        return patients.toPageResponse { patientSearchMapper.toPatientResponse(it) }
-    }
-
     @PostMapping
     fun registerPatient(@Valid @RequestBody request: RegisterPatientRequest): PatientIdResponse {
         val command = patientCommandMapper.toRegisterPatientCommand(request)
-        val patientId: Long = registerPatientUseCase.execute(command)
+        val patientId: Long = patientCommandUseCase.execute(command)
         return PatientIdResponse(patientId)
     }
 
@@ -48,7 +34,7 @@ class PatientController(
         @Valid @RequestBody request: UpdatePatientProfileRequest
     ) {
         val command = patientCommandMapper.toUpdatePatientProfileCommand(id, request)
-        updatePatientProfileUseCase.execute(command)
+        patientCommandUseCase.execute(command)
     }
 
     @PutMapping("/{id}/email")
@@ -57,11 +43,11 @@ class PatientController(
         @Valid @RequestBody request: ChangePatientEmailRequest
     ) {
         val command = patientCommandMapper.toChangePatientEmailCommand(id, request)
-        changePatientEmailUseCase.execute(command)
+        patientCommandUseCase.execute(command)
     }
 
     @DeleteMapping("/{id}")
     fun deletePatient(@PathVariable id: Long) {
-        deletePatientUseCase.execute(id)
+        patientCommandUseCase.execute(id)
     }
 }
